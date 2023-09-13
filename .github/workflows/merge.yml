@@ -19,8 +19,8 @@ jobs:
           cd ../
           chmod +x ./dnscrypt-proxy-config.sh
           ./dnscrypt-proxy-config.sh
-          git config user.name "jekya"
-          git config user.email "144327373+jekya@users.noreply.github.com"
+          git config user.name "jueyn"
+          git config user.email "129744577+jueyn@users.noreply.github.com"
           git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git add .
           git commit -m "$(date "+%Y%m%d-%H%M")"
@@ -36,14 +36,16 @@ jobs:
       USER_EMAIL: ${{ secrets.USER_EMAIL }}
       GITHUB_SERVER: github.com
       TARGET_DIRECTORY: ''
-      SOURCE_DIRECTORY: block
       TARGET_BRANCH: master
       COMMIT_MESSAGE: ${COMMIT_MESSAGE}
       
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v4
+        run: |
+          git config --global --add safe.directory $(pwd)
+          git clone --quiet https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} origin
+          
       -
         name: Push
         run: |
@@ -56,16 +58,15 @@ jobs:
           ssh-keyscan -H "$GITHUB_SERVER" > "$SSH_KNOWN_HOSTS_FILE"
           
           export GIT_SSH_COMMAND="ssh -i "$DEPLOY_KEY_FILE" -o UserKnownHostsFile=$SSH_KNOWN_HOSTS_FILE"
-          
-          GIT_CMD_REPOSITORY="git@$GITHUB_SERVER:$USER_NAME/$DEST_REPO.git"
+          GIT_CMD_REPOSITORY="git@$GITHUB_SERVER:${USER_NAME}/${DEST_REPO}.git"
           
           
           CLONE_DIR=$(mktemp -d)
           
           git --version
           git lfs install
-          git config --global user.email "$USER_EMAIL"
-          git config --global user.name "$USER_NAME"
+          git config --global user.email "${USER_EMAIL}"
+          git config --global user.name "${USER_NAME}"
           git config --global http.version HTTP/1.1
           
           git clone --single-branch --depth 1 "$GIT_CMD_REPOSITORY" "$CLONE_DIR"
@@ -81,10 +82,10 @@ jobs:
           ls -al
           ls -al /
           
-          mv "$TEMP_DIR/.git" "$CLONE_DIR/.git"
           
-          ls "$SOURCE_DIRECTORY"
-          cp -ra "$SOURCE_DIRECTORY"/. "$CLONE_DIR/$TARGET_DIRECTORY"
+          mv "$TEMP_DIR/.git" "$CLONE_DIR/.git"
+         
+          cp -p origin/blocked-ips.txt origin/blocked-names.txt "$CLONE_DIR/$TARGET_DIRECTORY"
           cd "$CLONE_DIR"
           ls -la
           
@@ -93,6 +94,7 @@ jobs:
           git config --global --add safe.directory "$CLONE_DIR"
           git add .
           git status
-          git diff-index --quiet HEAD || git commit --message "$COMMIT_MESSAGE"
+          git diff-index --quiet HEAD || git commit --message "$COMMIT_MESSAGE" --allow-empty
           git push "$GIT_CMD_REPOSITORY" --set-upstream "$TARGET_BRANCH"
-          
+
+        
