@@ -45,7 +45,7 @@ jobs:
         name: Checkout
         uses: actions/checkout@v4
       -
-        name: push
+        name: Push
         run: |
           mkdir --parents "$HOME/.ssh"
           DEPLOY_KEY_FILE="$HOME/.ssh/deploy_key"
